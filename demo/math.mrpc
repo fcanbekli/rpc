@@ -1,0 +1,3 @@
+rpc{
+    int sum(int a, int b)b
+}

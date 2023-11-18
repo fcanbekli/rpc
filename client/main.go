@@ -1,7 +1,7 @@
 package main
 
-import "fmt"
+import "mrpc"
 
 func main() {
-	fmt.Print("This is client")
+	mrpc.SayHello()
 }
