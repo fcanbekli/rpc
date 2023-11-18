@@ -1,0 +1,23 @@
+# Bazel
+/bazel-*
+/bazel-*/
+
+# Output directories
+/bazel-bin/
+/bazel-genfiles/
+/bazel-out/
+/bazel-testlogs/
+
+# Local build files
+/bazel-local/
+
+# Bazel configuration file
+.bazelrc
+
+# IDE files
+/.idea/
+*.iml
+
+# Other files generated during development
+/bazel-*_*.deb
+/bazel-*_*.rpm
