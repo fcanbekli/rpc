@@ -3,5 +3,5 @@ package main
 import "fmt"
 
 func main() {
-	fmt.Print("This is server")
+	fmt.Print("This is client")
 }
