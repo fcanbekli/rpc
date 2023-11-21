@@ -6,25 +6,14 @@ import (
 	"net"
 )
 
-// serializeInts serializes two integers into a byte slice
-func serializeInts(a, b int) []byte {
-	// Create a byte slice with enough capacity to hold two integers
-	data := make([]byte, 8*2)
-
-	// Use encoding/binary to serialize integers into the byte slice
-	binary.BigEndian.PutUint64(data[0:8], uint64(a))
-	binary.BigEndian.PutUint64(data[8:16], uint64(b))
-
-	return data
+func serializeInt(data []byte, value int, left int, right int) {
+	// Use encoding/binary to serialize the integer into the byte slice
+	binary.BigEndian.PutUint64(data[left:right], uint64(value))
 }
 
-// deserializeInts deserializes two integers from a byte slice
-func deserializeInts(data []byte) (int, int) {
-	// Use encoding/binary to deserialize integers from the byte slice
-	a := int(binary.BigEndian.Uint64(data[0:8]))
-	b := int(binary.BigEndian.Uint64(data[8:16]))
-
-	return a, b
+func deserializeInt(data []byte, start int, end int) int {
+	// Use encoding/binary to deserialize the integer from the byte slice
+	return int(binary.BigEndian.Uint64(data[start:end]))
 }
 
 // Client -------------------- Client
@@ -34,11 +23,16 @@ type RpcService struct {
 
 func (rpc *RpcService) Sum(a int, b int) int {
 
-	// Send a "Hello, World!" message to the server
-	message := serializeInts(a, b)
-	_, _ = rpc.conn.Write(message)
+	data := make([]byte, 8+8)
 
-	fmt.Printf("Sent message to server: %s\n", message)
+	// SERIALIZATION
+	serializeInt(data, a, 0, 8)
+	serializeInt(data, b, 8, 16)
+	// SERIALIZATION
+
+	_, _ = rpc.conn.Write(data)
+
+	fmt.Printf("Sent message to server: %s\n", data)
 
 	// Wait for a response from the server
 	responseBuffer := make([]byte, 1024)
@@ -47,9 +41,10 @@ func (rpc *RpcService) Sum(a int, b int) int {
 		fmt.Println("Error reading response from server:", err)
 	}
 
-	// Deserialize the response
-	responseValue, _ := deserializeInts(responseBuffer[:n])
-
+	// SERIALIZATION
+	responseValue := deserializeInt(responseBuffer[:n], 0, 8)
+	// SERIALIZATION
+	
 	return responseValue
 }
 
@@ -101,33 +96,32 @@ func StartServer(port string) {
 func handleConnection(conn net.Conn) {
 	defer conn.Close()
 
-	// Create a buffer to read data from the connection
 	buffer := make([]byte, 1024)
 
 	for {
-		// Read data from the connection
 		n, err := conn.Read(buffer)
 		if err != nil {
 			fmt.Println("Error reading from connection:", err)
 			return
 		}
 
-		// Print the data received from the connection
-		a, b := deserializeInts(buffer)
+		// SERIALIZATION
+		a := deserializeInt(buffer, 0, 8)
+		b := deserializeInt(buffer, 8, 16)
+		// SERIALIZATION
+
 		result := sum_rpc(a, b)
 
-		// Send the result back to the client
-		response := serializeInts(result, 0) //TODO: Make a version of this which is only serialize single integer
-		_, err = conn.Write(response)
+		data := make([]byte, 8)
+		serializeInt(data, result, 0, 8) //TODO: Make a version of this which is only serialize single integer
+		_, err = conn.Write(data)
 		if err != nil {
 			fmt.Println("Error sending response to client:", err)
 			return
 		}
 
-		// Print the received data and result
 		fmt.Printf("Received %d bytes from %s: %d, Sent response: %d\n", n, conn.RemoteAddr(), a, result)
 
-		// Check if the connection is closed by the client
 		if n == 0 {
 			fmt.Println("Connection closed by client")
 			return
