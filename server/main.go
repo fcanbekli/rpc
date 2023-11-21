@@ -1,7 +1,12 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"mrpc"
+)
 
 func main() {
-	fmt.Print("This is server")
+	fmt.Println("Tiny RPC Server Starting")
+
+	mrpc.StartServer("8080")
 }
