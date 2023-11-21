@@ -1,20 +1,9 @@
 package mrpc
 
 import (
-	"encoding/binary"
 	"fmt"
 	"net"
 )
-
-func serializeInt(data []byte, value int, left int, right int) {
-	// Use encoding/binary to serialize the integer into the byte slice
-	binary.BigEndian.PutUint64(data[left:right], uint64(value))
-}
-
-func deserializeInt(data []byte, start int, end int) int {
-	// Use encoding/binary to deserialize the integer from the byte slice
-	return int(binary.BigEndian.Uint64(data[start:end]))
-}
 
 // Client -------------------- Client
 type RpcService struct {
@@ -26,8 +15,8 @@ func (rpc *RpcService) Sum(a int, b int) int {
 	data := make([]byte, 8+8)
 
 	// SERIALIZATION
-	serializeInt(data, a, 0, 8)
-	serializeInt(data, b, 8, 16)
+	SerializeInt(data, a, 0, 8)
+	SerializeInt(data, b, 8, 16)
 	// SERIALIZATION
 
 	_, _ = rpc.conn.Write(data)
@@ -42,9 +31,9 @@ func (rpc *RpcService) Sum(a int, b int) int {
 	}
 
 	// SERIALIZATION
-	responseValue := deserializeInt(responseBuffer[:n], 0, 8)
+	responseValue := DeserializeInt(responseBuffer[:n], 0, 8)
 	// SERIALIZATION
-	
+
 	return responseValue
 }
 
@@ -106,14 +95,14 @@ func handleConnection(conn net.Conn) {
 		}
 
 		// SERIALIZATION
-		a := deserializeInt(buffer, 0, 8)
-		b := deserializeInt(buffer, 8, 16)
+		a := DeserializeInt(buffer, 0, 8)
+		b := DeserializeInt(buffer, 8, 16)
 		// SERIALIZATION
 
 		result := sum_rpc(a, b)
 
 		data := make([]byte, 8)
-		serializeInt(data, result, 0, 8) //TODO: Make a version of this which is only serialize single integer
+		SerializeInt(data, result, 0, 8) //TODO: Make a version of this which is only serialize single integer
 		_, err = conn.Write(data)
 		if err != nil {
 			fmt.Println("Error sending response to client:", err)

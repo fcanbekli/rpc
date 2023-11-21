@@ -4,6 +4,7 @@ go_library(
     name = "mrpc",
     srcs = [
         "math_mrpc.go",
+        "serialization.go"
     ],
     importpath = "mrpc",
     visibility = ["//visibility:public"],
