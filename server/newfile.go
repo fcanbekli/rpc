@@ -34,6 +34,7 @@ func DialServer(ip string, port string) *RpcService {
 	return &rpc_service
 }
 
+
 func StartServer(port string) {
 	//Start TCP Socket
 	listener, err := net.Listen("tcp", ":"+port)
@@ -60,7 +61,7 @@ func StartServer(port string) {
 }
 
 func handleConnection(conn net.Conn) {
-
+		
 	defer conn.Close()
 	buffer := make([]byte, 1024)
 	for {
@@ -70,11 +71,11 @@ func handleConnection(conn net.Conn) {
 			return
 		}
 
-		a := DeserializeInt(buffer, 0, 8)
-		b := DeserializeInt(buffer, 8, 16)
-		result := Sum(a, b)
-		data := make([]byte, 8)
-		SerializeInt(data, a, 0, 8)
+	a := DeserializeInt(buffer, 0, 8)
+	b := DeserializeInt(buffer, 8, 16)
+result := Sum(a, b)
+	data := make([]byte, 8)
+	SerializeInt(data, a, 0, 8)
 		_, err = conn.Write(data)
 		if err != nil {
 			fmt.Println("Error sending response to client:", err)
@@ -93,14 +94,13 @@ func (rpc *RpcService) RPC_Sum(a int, b int) int {
 	data := make([]byte, 16)
 	SerializeInt(data, a, 0, 8)
 	SerializeInt(data, b, 8, 16)
-	_, _ = rpc.conn.Write(data)
 	// Wait for a response from the server
-	responseBuffer := make([]byte, 1024)
-	n, err := rpc.conn.Read(responseBuffer)
-	if err != nil {
+		responseBuffer := make([]byte, 1024)
+		n, err := rpc.conn.Read(responseBuffer)
+		if err != nil {
 		fmt.Println("Error reading response from server:", err)
-		responseValue := DeserializeInt(responseBuffer[:n], 0, 8)
-		return responseValue
+	responseValue := DeserializeInt(responseBuffer[:n], 0, 8)
+return responseValue
 	}
 	return a + b
 }
@@ -108,14 +108,13 @@ func (rpc *RpcService) RPC_Multiply(a int, b int) int {
 	data := make([]byte, 16)
 	SerializeInt(data, a, 0, 8)
 	SerializeInt(data, b, 8, 16)
-	_, _ = rpc.conn.Write(data)
 	// Wait for a response from the server
-	responseBuffer := make([]byte, 1024)
-	n, err := rpc.conn.Read(responseBuffer)
-	if err != nil {
+		responseBuffer := make([]byte, 1024)
+		n, err := rpc.conn.Read(responseBuffer)
+		if err != nil {
 		fmt.Println("Error reading response from server:", err)
-		responseValue := DeserializeInt(responseBuffer[:n], 0, 8)
-		return responseValue
+	responseValue := DeserializeInt(responseBuffer[:n], 0, 8)
+return responseValue
 	}
 	return a + b
 }

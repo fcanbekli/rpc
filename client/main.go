@@ -7,7 +7,7 @@ import (
 func main() {
 	rpc := DialServer("x", "8080")
 
-	res := rpc.RPC_Sum(1, 3)
+	res := rpc.RPC_Sum(10, 3)
 	// Access and print the fields of the struct
 	fmt.Printf("Sum: %d\n", res)
 	//err := rpc.EndConnection()
