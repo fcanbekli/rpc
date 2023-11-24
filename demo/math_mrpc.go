@@ -19,8 +19,6 @@ func (rpc *RpcService) Sum(a int, b int) int {
 	SerializeInt(data, b, 8, 16)
 	// SERIALIZATION
 
-	_, _ = rpc.conn.Write(data)
-
 	fmt.Printf("Sent message to server: %s\n", data)
 
 	// Wait for a response from the server
@@ -94,10 +92,10 @@ func handleConnection(conn net.Conn) {
 			return
 		}
 
-		// SERIALIZATION
+		// DESERIALIZATION
 		a := DeserializeInt(buffer, 0, 8)
 		b := DeserializeInt(buffer, 8, 16)
-		// SERIALIZATION
+		// DESERIALIZATION
 
 		result := sum_rpc(a, b)
 

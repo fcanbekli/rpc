@@ -2,9 +2,9 @@
 package main
 
 import (
-	"encoding/binary"
 	"fmt"
 	"net"
+	"encoding/binary"
 )
 
 func SerializeInt(data []byte, value int, left int, right int) {
@@ -34,6 +34,7 @@ func DialServer(ip string, port string) *RpcService {
 	return &rpc_service
 }
 
+
 func StartServer(port string) {
 	//Start TCP Socket
 	listener, err := net.Listen("tcp", ":"+port)
@@ -59,11 +60,34 @@ func StartServer(port string) {
 	}
 }
 
+
 func handleConnection(conn net.Conn) {}
 
-func RPC_Sum(a int, b int) int {
+func (rpc *RpcService) RPC_Sum(a int, b int) int {
+	data := make([]byte, 16)
+	SerializeInt(data, a, 0, 8)
+	SerializeInt(data, b, 8, 16)
+	// Wait for a response from the server
+		responseBuffer := make([]byte, 1024)
+		n, err := rpc.conn.Read(responseBuffer)
+		if err != nil {
+		fmt.Println("Error reading response from server:", err)
+	responseValue := DeserializeInt(responseBuffer[:n], 0, 8)
+return responseValue
+	}
 	return a + b
 }
-func RPC_Multiply(a int, b int) int {
+func (rpc *RpcService) RPC_Multiply(a int, b int) int {
+	data := make([]byte, 16)
+	SerializeInt(data, a, 0, 8)
+	SerializeInt(data, b, 8, 16)
+	// Wait for a response from the server
+		responseBuffer := make([]byte, 1024)
+		n, err := rpc.conn.Read(responseBuffer)
+		if err != nil {
+		fmt.Println("Error reading response from server:", err)
+	responseValue := DeserializeInt(responseBuffer[:n], 0, 8)
+return responseValue
+	}
 	return a + b
 }

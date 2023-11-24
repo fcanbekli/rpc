@@ -4,7 +4,8 @@ go_binary(
     name = "trpc",
     srcs = [
         "trpc.go",
-        "strings.go"
+        "strings.go",
+        "size.go"
     ],
     visibility = ["//visibility:public"],
 )

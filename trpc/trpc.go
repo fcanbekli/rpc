@@ -67,13 +67,85 @@ func generateTrpcFile(directoryPath string) (*os.File, error) {
 	return file, nil
 }
 
+func addLinesAfterFunc(input string, linesToAdd string, lineNumber int) (string, error) {
+	// Split the input string into lines
+	lines := strings.Split(input, "\n")
+
+	// Find the line containing "func"
+	foundFunc := false
+	for i, line := range lines {
+		if strings.Contains(line, "func") {
+			foundFunc = true
+
+			// Insert the linesToAdd at the specified line number after "func"
+			insertIndex := i + lineNumber + 1
+			if insertIndex > len(lines) {
+				return "", fmt.Errorf("line number %d is out of range", lineNumber)
+			}
+
+			lines = append(lines[:insertIndex], append([]string{linesToAdd}, lines[insertIndex:]...)...)
+			break
+		}
+	}
+
+	if !foundFunc {
+		return "", fmt.Errorf("no line containing 'func' found")
+	}
+
+	// Join the modified lines back into a string
+	result := strings.Join(lines, "\n")
+	return result, nil
+}
+
 // Function to generate RPC functions with a prefix
 func generateRPCFunctions(rpcFunctions []string) []string {
 	var rpcWithPrefix []string
 
 	for _, rpcFunc := range rpcFunctions {
 		// Add RPC prefix to function names
-		rpcWithPrefix = append(rpcWithPrefix, strings.ReplaceAll(rpcFunc, "func ", "func RPC_"))
+		//		var finalFunction string
+
+		finalFunction := strings.ReplaceAll(rpcFunc, "func ", "func (rpc *RpcService) RPC_")
+
+		// Argument and return type size calculation
+		argumentSize, _ := calculateArgumentSize(rpcFunc)
+		//	returnSize, _ := calculateReturnSize(rpcFunc)
+
+		// Buffer allocation
+		str := fmt.Sprintf("\tdata := make([]byte, %d)", argumentSize)
+		finalFunction, _ = addLinesAfterFunc(finalFunction, str, 0)
+
+		// Input serialization part
+		var byteCounter = 0
+		ser1 := fmt.Sprintf("\tSerializeInt(data, %s, %d, %d)", "a", byteCounter, byteCounter+8 /*size of int*/)
+		byteCounter += 8
+		finalFunction, _ = addLinesAfterFunc(finalFunction, ser1, 1)
+
+		ser2 := fmt.Sprintf("\tSerializeInt(data, %s, %d, %d)", "b", byteCounter, byteCounter+8 /*size of int*/)
+		byteCounter += 8
+		finalFunction, _ = addLinesAfterFunc(finalFunction, ser2, 2)
+
+		// Connection read part
+		finalFunction, _ = addLinesAfterFunc(finalFunction, `	// Wait for a response from the server
+		responseBuffer := make([]byte, 1024)
+		n, err := rpc.conn.Read(responseBuffer)
+		if err != nil {
+		fmt.Println("Error reading response from server:", err)
+	}`, 3)
+
+		// Deserialize response part
+		var byteCounter2 = 0
+		des1 := fmt.Sprintf("\tresponseValue := DeserializeInt(responseBuffer[:n], %d, %d)", byteCounter2, byteCounter2+8 /*size of int*/)
+		byteCounter += 8
+
+		finalFunction, _ = addLinesAfterFunc(finalFunction, des1, 8)
+
+		// Return
+		finalFunction, _ = addLinesAfterFunc(finalFunction, "return responseValue", 9)
+
+		rpcWithPrefix = append(rpcWithPrefix, finalFunction)
+		// Find function argument input size and return size
+
 	}
 
 	return rpcWithPrefix
