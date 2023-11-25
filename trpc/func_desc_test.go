@@ -4,14 +4,44 @@ import (
 	"testing"
 )
 
-func TestFunctionDescriptionNew(t *testing.T) {
+func TestFcGetArgumentSize(t *testing.T) {
+	desc := &FunctionDescription{}
+
+	desc.ArgumentTypes = []string{"int"}
+	size := desc.GetArgumentSize()
+	if size != 8 {
+		t.Errorf("Expected size %d, got %d", 8, size)
+	}
+
+	desc.ArgumentTypes = []string{"int", "int"}
+	size = desc.GetArgumentSize()
+	if size != 16 {
+		t.Errorf("Expected size %d, got %d", 16, size)
+	}
+}
+
+func TestFcGetReturnTypeSize(t *testing.T) {
+	desc := &FunctionDescription{}
+
+	desc.ReturnTypes = []string{"int"}
+	size := desc.GetReturnTypeSize()
+	if size != 8 {
+		t.Errorf("Expected size %d, got %d", 8, size)
+	}
+
+	desc.ReturnTypes = []string{"float32", "float32"}
+	size = desc.GetReturnTypeSize()
+	if size != 8 {
+		t.Errorf("Expected size %d, got %d", 8, size)
+	}
+}
+
+func TestFcNew(t *testing.T) {
 	tests := []struct {
 		rawFunction      string
 		expectedName     string
 		expectedArgTypes []string
-		expectedArgsSize int
 		expectedRetTypes []string
-		expectedRetSize  int
 	}{ //TODO: Add more test cases to here!
 		{
 			rawFunction: `
@@ -22,9 +52,7 @@ func TestFunctionDescriptionNew(t *testing.T) {
 			`,
 			expectedName:     "Sum",
 			expectedArgTypes: []string{"int", "int"},
-			expectedArgsSize: 16, // (int: 4 bytes) + (int: 4 bytes) = 8 bytes
 			expectedRetTypes: []string{"int"},
-			expectedRetSize:  8, // (int: 4 bytes)
 		},
 		// Add more test cases here
 	}
@@ -43,19 +71,9 @@ func TestFunctionDescriptionNew(t *testing.T) {
 			t.Errorf("Expected argument types %v, got %v", test.expectedArgTypes, desc.ArgumentTypes)
 		}
 
-		// Check arguments total size
-		if desc.ArgumentsTotalSizeAsByte != test.expectedArgsSize {
-			t.Errorf("Expected arguments total size %d bytes, got %d bytes", test.expectedArgsSize, desc.ArgumentsTotalSizeAsByte)
-		}
-
 		// Check return types
 		if !equalStringSlices(desc.ReturnTypes, test.expectedRetTypes) {
 			t.Errorf("Expected return types %v, got %v", test.expectedRetTypes, desc.ReturnTypes)
-		}
-
-		// Check return types total size
-		if desc.ReturnTypesTotalSizeAsByte != test.expectedRetSize {
-			t.Errorf("Expected return types total size %d bytes, got %d bytes", test.expectedRetSize, desc.ReturnTypesTotalSizeAsByte)
 		}
 	}
 }

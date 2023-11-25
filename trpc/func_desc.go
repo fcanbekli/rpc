@@ -3,18 +3,16 @@ package main
 import (
 	"regexp"
 	"strings"
+	"unsafe"
 )
 
 type FunctionDescription struct {
-	FunctionName               string
-	FunctionRaw                string
-	ArgumentTypes              []string // int, float32, etc...
-	ArgumentsTotalSizeAsByte   int
-	ReturnTypes                []string // int, float32, etc...
-	ReturnTypesTotalSizeAsByte int
+	FunctionName  string
+	FunctionRaw   string
+	ArgumentTypes []string // int, float32, etc...
+	ReturnTypes   []string // int, float32, etc...
 }
 
-// New
 func (fc *FunctionDescription) New(functionRaw string) *FunctionDescription { //TODO: This code is does not working as expected, it only works for Sum(a int, b int) int case
 	fc.FunctionRaw = functionRaw
 
@@ -36,7 +34,6 @@ func (fc *FunctionDescription) New(functionRaw string) *FunctionDescription { //
 			parts := strings.Fields(argType)
 			if len(parts) > 0 {
 				fc.ArgumentTypes[i] = parts[len(parts)-1] // Take the last part as type
-				fc.ArgumentsTotalSizeAsByte += typeSizeInBytes(parts[len(parts)-1])
 			}
 		}
 	}
@@ -49,11 +46,50 @@ func (fc *FunctionDescription) New(functionRaw string) *FunctionDescription { //
 		fc.ReturnTypes = make([]string, len(retTypes))
 		for i, retType := range retTypes {
 			fc.ReturnTypes[i] = strings.TrimSpace(retType)
-			fc.ReturnTypesTotalSizeAsByte += typeSizeInBytes(strings.TrimSpace(retType))
 		}
 	}
 
 	return fc
+}
+
+func (fc *FunctionDescription) GetArgumentSize() int {
+	var totalSize int
+	for _, s := range fc.ArgumentTypes {
+		totalSize += getSizeMap()[s]
+	}
+	return totalSize
+}
+
+func (fc *FunctionDescription) GetReturnTypeSize() int {
+	var totalSize int
+	for _, s := range fc.ReturnTypes {
+		totalSize += getSizeMap()[s]
+	}
+	return totalSize
+}
+
+func getSizeMap() map[string]int {
+	sizeMap := make(map[string]int)
+
+	sizeMap["int"] = int(unsafe.Sizeof(int(0)))
+	sizeMap["int8"] = int(unsafe.Sizeof(int8(0)))
+	sizeMap["int16"] = int(unsafe.Sizeof(int16(0)))
+	sizeMap["int32"] = int(unsafe.Sizeof(int32(0)))
+	sizeMap["int64"] = int(unsafe.Sizeof(int64(0)))
+
+	sizeMap["uint"] = int(unsafe.Sizeof(uint(0)))
+	sizeMap["uint8"] = int(unsafe.Sizeof(uint8(0)))
+	sizeMap["uint16"] = int(unsafe.Sizeof(uint16(0)))
+	sizeMap["uint32"] = int(unsafe.Sizeof(uint32(0)))
+	sizeMap["uint64"] = int(unsafe.Sizeof(uint64(0)))
+
+	sizeMap["float32"] = int(unsafe.Sizeof(float32(0)))
+	sizeMap["float64"] = int(unsafe.Sizeof(float64(0)))
+
+	sizeMap["bool"] = int(unsafe.Sizeof(false))
+
+	sizeMap["string"] = int(unsafe.Sizeof(""))
+	return sizeMap
 }
 
 // Helper function to calculate size of types in bytes
